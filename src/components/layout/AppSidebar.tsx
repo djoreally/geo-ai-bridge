@@ -44,8 +44,9 @@ const managementNavItems = [
 ];
 
 export function AppSidebar() {
-  const { collapsed } = useSidebar();
+  const { state } = useSidebar();
   const location = useLocation();
+  const isCollapsed = state === 'collapsed';
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -58,14 +59,14 @@ export function AppSidebar() {
       : 'hover:bg-sidebar-accent/50';
 
   return (
-    <Sidebar className={collapsed ? 'w-14' : 'w-64'} collapsible>
+    <Sidebar className={isCollapsed ? 'w-14' : 'w-64'} collapsible="offcanvas">
       <SidebarContent>
         <div className="p-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Truck className="w-5 h-5 text-primary-foreground" />
             </div>
-            {!collapsed && (
+            {!isCollapsed && (
               <div>
                 <h1 className="font-bold text-lg">FleetCommand</h1>
                 <p className="text-xs text-muted-foreground">Mobile Oil Service</p>
@@ -83,7 +84,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavClass(item.url)}>
                       <item.icon className="w-4 h-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -101,7 +102,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavClass(item.url)}>
                       <item.icon className="w-4 h-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

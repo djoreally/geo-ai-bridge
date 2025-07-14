@@ -1,115 +1,119 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { Van, Job, Technician, Client, Equipment, Notification } from '@/types';
+import type { AppState, Van, Job, Technician, Client, Notification } from '../types';
 
-interface FleetState {
-  // Data
-  vans: Van[];
-  jobs: Job[];
-  technicians: Technician[];
-  clients: Client[];
-  equipment: Equipment[];
-  notifications: Notification[];
-  
-  // UI State
-  sidebarCollapsed: boolean;
-  activeFilters: Record<string, any>;
-  
+interface FleetStore extends AppState {
   // Actions
   setVans: (vans: Van[]) => void;
+  addVan: (van: Van) => void;
+  updateVan: (id: string, updates: Partial<Van>) => void;
+  removeVan: (id: string) => void;
+  
   setJobs: (jobs: Job[]) => void;
+  addJob: (job: Job) => void;
+  updateJob: (id: string, updates: Partial<Job>) => void;
+  removeJob: (id: string) => void;
+  
   setTechnicians: (technicians: Technician[]) => void;
+  addTechnician: (technician: Technician) => void;
+  updateTechnician: (id: string, updates: Partial<Technician>) => void;
+  removeTechnician: (id: string) => void;
+  
   setClients: (clients: Client[]) => void;
-  setEquipment: (equipment: Equipment[]) => void;
+  addClient: (client: Client) => void;
+  updateClient: (id: string, updates: Partial<Client>) => void;
+  removeClient: (id: string) => void;
+  
   setNotifications: (notifications: Notification[]) => void;
-  addNotification: (notification: Omit<Notification, 'id' | 'createdAt'>) => void;
+  addNotification: (notification: Notification) => void;
   markNotificationRead: (id: string) => void;
-  toggleSidebar: () => void;
-  setFilters: (filters: Record<string, any>) => void;
+  removeNotification: (id: string) => void;
   
   // Computed values
-  getActiveVans: () => Van[];
-  getScheduledJobs: () => Job[];
-  getAvailableTechnicians: () => Technician[];
+  getVanById: (id: string) => Van | undefined;
+  getJobById: (id: string) => Job | undefined;
+  getTechnicianById: (id: string) => Technician | undefined;
+  getClientById: (id: string) => Client | undefined;
   getUnreadNotifications: () => Notification[];
-  getDashboardMetrics: () => {
-    activeVans: number;
-    scheduledJobs: number;
-    activeTechnicians: number;
-    totalRevenue: number;
-  };
 }
 
-export const useFleetStore = create<FleetState>()(
+export const useFleetStore = create<FleetStore>()(
   devtools(
     (set, get) => ({
       // Initial state
+      user: null,
+      notifications: [],
+      activeJobs: [],
       vans: [],
-      jobs: [],
       technicians: [],
       clients: [],
-      equipment: [],
-      notifications: [],
-      sidebarCollapsed: false,
-      activeFilters: {},
-
-      // Actions
+      
+      // Van actions
       setVans: (vans) => set({ vans }),
-      setJobs: (jobs) => set({ jobs }),
+      addVan: (van) => set((state) => ({ vans: [...state.vans, van] })),
+      updateVan: (id, updates) =>
+        set((state) => ({
+          vans: state.vans.map((van) => (van.id === id ? { ...van, ...updates } : van)),
+        })),
+      removeVan: (id) =>
+        set((state) => ({ vans: state.vans.filter((van) => van.id !== id) })),
+      
+      // Job actions
+      setJobs: (jobs) => set({ activeJobs: jobs }),
+      addJob: (job) => set((state) => ({ activeJobs: [...state.activeJobs, job] })),
+      updateJob: (id, updates) =>
+        set((state) => ({
+          activeJobs: state.activeJobs.map((job) => (job.id === id ? { ...job, ...updates } : job)),
+        })),
+      removeJob: (id) =>
+        set((state) => ({ activeJobs: state.activeJobs.filter((job) => job.id !== id) })),
+      
+      // Technician actions
       setTechnicians: (technicians) => set({ technicians }),
+      addTechnician: (technician) =>
+        set((state) => ({ technicians: [...state.technicians, technician] })),
+      updateTechnician: (id, updates) =>
+        set((state) => ({
+          technicians: state.technicians.map((tech) =>
+            tech.id === id ? { ...tech, ...updates } : tech
+          ),
+        })),
+      removeTechnician: (id) =>
+        set((state) => ({ technicians: state.technicians.filter((tech) => tech.id !== id) })),
+      
+      // Client actions
       setClients: (clients) => set({ clients }),
-      setEquipment: (equipment) => set({ equipment }),
+      addClient: (client) => set((state) => ({ clients: [...state.clients, client] })),
+      updateClient: (id, updates) =>
+        set((state) => ({
+          clients: state.clients.map((client) =>
+            client.id === id ? { ...client, ...updates } : client
+          ),
+        })),
+      removeClient: (id) =>
+        set((state) => ({ clients: state.clients.filter((client) => client.id !== id) })),
+      
+      // Notification actions
       setNotifications: (notifications) => set({ notifications }),
+      addNotification: (notification) =>
+        set((state) => ({ notifications: [...state.notifications, notification] })),
+      markNotificationRead: (id) =>
+        set((state) => ({
+          notifications: state.notifications.map((notif) =>
+            notif.id === id ? { ...notif, read: true } : notif
+          ),
+        })),
+      removeNotification: (id) =>
+        set((state) => ({ notifications: state.notifications.filter((notif) => notif.id !== id) })),
       
-      addNotification: (notification) => set((state) => ({
-        notifications: [
-          {
-            ...notification,
-            id: `notification-${Date.now()}`,
-            createdAt: new Date().toISOString(),
-          },
-          ...state.notifications,
-        ],
-      })),
-      
-      markNotificationRead: (id) => set((state) => ({
-        notifications: state.notifications.map((n) =>
-          n.id === id ? { ...n, isRead: true } : n
-        ),
-      })),
-      
-      toggleSidebar: () => set((state) => ({
-        sidebarCollapsed: !state.sidebarCollapsed,
-      })),
-      
-      setFilters: (filters) => set({ activeFilters: filters }),
-
       // Computed values
-      getActiveVans: () => get().vans.filter((van) => van.status === 'on_job'),
-      
-      getScheduledJobs: () => get().jobs.filter((job) => 
-        job.status === 'scheduled' || job.status === 'in_progress'
-      ),
-      
-      getAvailableTechnicians: () => get().technicians.filter((tech) => 
-        tech.status === 'available'
-      ),
-      
-      getUnreadNotifications: () => get().notifications.filter((n) => !n.isRead),
-      
-      getDashboardMetrics: () => {
-        const state = get();
-        return {
-          activeVans: state.vans.filter((v) => v.status === 'on_job').length,
-          scheduledJobs: state.jobs.filter((j) => j.status === 'scheduled').length,
-          activeTechnicians: state.technicians.filter((t) => t.status === 'on_job').length,
-          totalRevenue: state.jobs.reduce((sum, job) => sum + job.revenue, 0),
-        };
-      },
+      getVanById: (id) => get().vans.find((van) => van.id === id),
+      getJobById: (id) => get().activeJobs.find((job) => job.id === id),
+      getTechnicianById: (id) => get().technicians.find((tech) => tech.id === id),
+      getClientById: (id) => get().clients.find((client) => client.id === id),
+      getUnreadNotifications: () => get().notifications.filter((notif) => !notif.read),
     }),
-    {
-      name: 'fleet-store',
-    }
+    { name: 'fleet-store' }
   )
 );

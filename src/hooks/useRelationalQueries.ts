@@ -81,6 +81,19 @@ export function useRelationalQueries() {
     };
   };
 
+  // Simple getters for basic relations - these are what the components expect
+  const getClientWithRelations = (clientId: string) => {
+    return state.clients.find(c => c.id === clientId);
+  };
+
+  const getTechnicianWithRelations = (technicianId: string) => {
+    return state.technicians.find(t => t.id === technicianId);
+  };
+
+  const getVanWithRelations = (vanId: string) => {
+    return state.vans.find(v => v.id === vanId);
+  };
+
   // Get available resources for dispatch
   const getAvailableResources = {
     availableVans: state.vans.filter(van => van.status === 'active'),
@@ -102,7 +115,17 @@ export function useRelationalQueries() {
         tech.status === 'active'
       ).length,
       completedJobs: state.jobs.filter(job => job.status === 'completed').length,
-      pendingJobs: state.jobs.filter(job => job.status === 'scheduled').length
+      pendingJobs: state.jobs.filter(job => job.status === 'scheduled').length,
+      scheduledJobs: state.jobs.filter(job => job.status === 'scheduled').length,
+      openTickets: state.notifications.filter(n => !n.read).length,
+      vehiclesServicedToday: state.jobs.filter(job => 
+        job.status === 'completed' && 
+        job.actualEnd && 
+        new Date(job.actualEnd).toDateString() === today
+      ).length,
+      totalRevenue: state.jobs
+        .filter(job => job.status === 'completed')
+        .reduce((sum, job) => sum + job.costBreakdown.totalPrice, 0)
     };
   };
 
@@ -130,6 +153,9 @@ export function useRelationalQueries() {
     getTechnicianDetails,
     getJobDetails,
     getClientDetails,
+    getClientWithRelations,
+    getTechnicianWithRelations,
+    getVanWithRelations,
     getAvailableResources,
     getDashboardMetrics,
     getJobsByStatus,

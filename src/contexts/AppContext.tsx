@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import type { 
   Client, 
@@ -9,7 +8,9 @@ import type {
   Job, 
   Notification, 
   Equipment, 
-  User 
+  User,
+  InventoryItem,
+  Service
 } from '@/types';
 
 // State interface
@@ -23,6 +24,8 @@ interface AppState {
   jobs: Job[];
   notifications: Notification[];
   equipment: Equipment[];
+  inventory: InventoryItem[];
+  services: Service[];
   loading: boolean;
   error: string | null;
 }
@@ -68,6 +71,8 @@ const initialState: AppState = {
   jobs: [],
   notifications: [],
   equipment: [],
+  inventory: [],
+  services: [],
   loading: false,
   error: null,
 };

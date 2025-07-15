@@ -14,12 +14,12 @@ export default function Technicians() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredTechnicians = state.technicians.filter(tech =>
-    tech.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    tech.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tech.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const activeTechnicians = state.technicians.filter(tech => tech.status === 'active').length;
-  const onDutyTechnicians = state.technicians.filter(tech => tech.status === 'on_duty').length;
+  const onDutyTechnicians = state.technicians.filter(tech => tech.status === 'active').length; // Using active instead of on_duty
 
   return (
     <div className="space-y-6">
@@ -112,11 +112,11 @@ export default function Technicians() {
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-12 w-12">
                         <AvatarFallback>
-                          {technician.name.split(' ').map(n => n[0]).join('')}
+                          {technician.fullName.split(' ').map(n => n[0]).join('')}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="font-semibold">{technician.name}</h3>
+                        <h3 className="font-semibold">{technician.fullName}</h3>
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <div className="flex items-center space-x-1">
                             <Mail className="h-4 w-4" />
@@ -130,7 +130,7 @@ export default function Technicians() {
                         <div className="flex items-center space-x-2 mt-2">
                           {technician.certifications.map((cert, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
-                              {cert}
+                              {cert.name}
                             </Badge>
                           ))}
                         </div>
@@ -140,7 +140,7 @@ export default function Technicians() {
                       <Badge 
                         variant={
                           technician.status === 'active' ? 'default' : 
-                          technician.status === 'on_duty' ? 'secondary' : 
+                          technician.status === 'active' ? 'secondary' : 
                           'destructive'
                         }
                       >
@@ -169,11 +169,11 @@ export default function Technicians() {
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="text-xs">
-                          {technician.name.split(' ').map(n => n[0]).join('')}
+                          {technician.fullName.split(' ').map(n => n[0]).join('')}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">{technician.name}</p>
+                        <p className="font-medium">{technician.fullName}</p>
                         <p className="text-sm text-muted-foreground">
                           Mon-Fri: 8:00 AM - 5:00 PM
                         </p>
@@ -203,10 +203,10 @@ export default function Technicians() {
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
                           <AvatarFallback className="text-xs">
-                            {technician.name.split(' ').map(n => n[0]).join('')}
+                            {technician.fullName.split(' ').map(n => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
-                        <p className="font-medium">{technician.name}</p>
+                        <p className="font-medium">{technician.fullName}</p>
                       </div>
                       <Badge variant="outline">
                         {technician.certifications.length} Certifications
@@ -216,7 +216,7 @@ export default function Technicians() {
                       {technician.certifications.map((cert, index) => (
                         <Badge key={index} variant="secondary">
                           <Award className="h-3 w-3 mr-1" />
-                          {cert}
+                          {cert.name}
                         </Badge>
                       ))}
                     </div>
@@ -236,11 +236,11 @@ export default function Technicians() {
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-10 w-10">
                         <AvatarFallback>
-                          {technician.name.split(' ').map(n => n[0]).join('')}
+                          {technician.fullName.split(' ').map(n => n[0]).join('')}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">{technician.name}</p>
+                        <p className="font-medium">{technician.fullName}</p>
                         <p className="text-sm text-muted-foreground">
                           Jobs completed this month: 25
                         </p>

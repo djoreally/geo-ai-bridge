@@ -3,7 +3,11 @@
 
 export interface Client {
   id: string;
+  name: string;
   businessName: string;
+  email: string;
+  phone: string;
+  status: 'active' | 'inactive' | 'pending';
   primaryContact: {
     name: string;
     phone: string;
@@ -22,6 +26,7 @@ export interface Client {
 export interface Location {
   id: string;
   clientId: string;
+  name: string;
   address: string;
   city: string;
   state: string;
@@ -45,6 +50,7 @@ export interface Vehicle {
   engine: string;
   licensePlate: string;
   mileage: number;
+  status: 'active' | 'inactive' | 'maintenance';
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -53,7 +59,11 @@ export interface Vehicle {
 export interface Van {
   id: string;
   name: string;
+  make: string;
+  model: string;
+  year: number;
   licensePlate: string;
+  fuelLevel: number;
   capacity: {
     oil: number; // gallons
     filters: number;
@@ -77,6 +87,7 @@ export interface Van {
 
 export interface Technician {
   id: string;
+  name: string;
   fullName: string;
   email: string;
   phone: string;
@@ -110,6 +121,8 @@ export interface Certification {
 export interface Job {
   id: string;
   title: string;
+  type: string;
+  description?: string;
   clientId: string;
   locationId: string;
   vehicleId: string;
@@ -162,8 +175,11 @@ export interface Service {
   category: 'maintenance' | 'repairs' | 'inspection';
   estimatedDuration: number; // minutes
   basePrice: number;
+  price: number;
+  isActive: boolean;
   taxRate: number;
   requiredInventory: ServiceInventoryRequirement[];
+  requiredParts?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -178,10 +194,16 @@ export interface InventoryItem {
   id: string;
   partId: string;
   name: string;
+  sku: string;
   description: string;
   type: 'oil' | 'filter' | 'fluid' | 'tools' | 'misc';
+  category: string;
+  location: string;
   unitCost: number;
+  unitPrice: number;
   warehouseQuantity: number;
+  quantity: number;
+  minQuantity: number;
   restockThreshold: number;
   specifications?: Record<string, string>;
   createdAt: Date;

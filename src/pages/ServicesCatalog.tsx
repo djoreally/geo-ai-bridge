@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Wrench, Search, Clock, DollarSign, Plus, Edit } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } = from '@/components/ui/tabs';
+import { Plus, Search, Wrench, Clock, DollarSign } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
 
 export default function ServicesCatalog() {
@@ -17,9 +17,10 @@ export default function ServicesCatalog() {
     service.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const activeServices = state.services.filter(service => service.isActive).length;
-  const avgPrice = state.services.reduce((sum, service) => sum + service.price, 0) / state.services.length;
-  const avgDuration = state.services.reduce((sum, service) => sum + service.estimatedDuration, 0) / state.services.length;
+  const maintenanceServices = state.services.filter(service => service.category === 'maintenance').length;
+  const repairServices = state.services.filter(service => service.category === 'repairs').length;
+  const avgPrice = state.services.length > 0 ? 
+    state.services.reduce((sum, service) => sum + service.basePrice, 0) / state.services.length : 0;
 
   return (
     <div className="space-y-6">
@@ -27,7 +28,7 @@ export default function ServicesCatalog() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Services Catalog</h1>
           <p className="text-muted-foreground">
-            Manage service offerings, pricing, and descriptions
+            Manage service offerings, pricing, and inventory requirements
           </p>
         </div>
         <Button className="gap-2">
@@ -48,28 +49,28 @@ export default function ServicesCatalog() {
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Services</CardTitle>
+            <CardTitle className="text-sm font-medium">Maintenance</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{activeServices}</div>
+            <div className="text-2xl font-bold text-green-600">{maintenanceServices}</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Price</CardTitle>
+            <CardTitle className="text-sm font-medium">Repairs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{repairServices}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Avg Price</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${avgPrice.toFixed(0)}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Duration</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Math.round(avgDuration)}m</div>
           </CardContent>
         </Card>
       </div>
@@ -78,8 +79,8 @@ export default function ServicesCatalog() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="all">All Services</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-          <TabsTrigger value="repair">Repair</TabsTrigger>
-          <TabsTrigger value="packages">Packages</TabsTrigger>
+          <TabsTrigger value="repairs">Repairs</TabsTrigger>
+          <TabsTrigger value="pricing">Pricing</TabsTrigger>
         </TabsList>
         
         <TabsContent value="all" className="space-y-4">
@@ -109,38 +110,33 @@ export default function ServicesCatalog() {
                         <p className="text-sm text-muted-foreground">{service.description}</p>
                         <div className="flex items-center space-x-4 mt-2">
                           <div className="flex items-center space-x-1">
-                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">${service.price}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">{service.estimatedDuration} min</span>
                           </div>
+                          <div className="flex items-center space-x-1">
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">${service.basePrice}</span>
+                          </div>
                         </div>
+                        {service.requiredInventory && service.requiredInventory.length > 0 && (
+                          <div className="flex items-center space-x-2 mt-2">
+                            <span className="text-xs text-muted-foreground">Required parts:</span>
+                            <span className="text-xs">{service.requiredInventory.length} items</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant={service.isActive ? 'default' : 'secondary'}>
-                        {service.isActive ? 'Active' : 'Inactive'}
+                      <Badge 
+                        variant={service.category === 'maintenance' ? 'default' : 'secondary'}
+                      >
+                        {service.category}
                       </Badge>
                       <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4" />
+                        Edit
                       </Button>
                     </div>
                   </div>
-                  
-                  {service.requiredParts && service.requiredParts.length > 0 && (
-                    <div className="mt-4 pt-4 border-t">
-                      <p className="text-sm font-medium mb-2">Required Parts:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {service.requiredParts.map((part, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {part}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             ))}
@@ -155,17 +151,19 @@ export default function ServicesCatalog() {
               <Card key={service.id}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">{service.name}</h3>
-                      <p className="text-sm text-muted-foreground">{service.description}</p>
-                      <div className="flex items-center space-x-4 mt-2 text-sm">
-                        <span>${service.price}</span>
-                        <span>{service.estimatedDuration} min</span>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <Wrench className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{service.name}</h3>
+                        <p className="text-sm text-muted-foreground">{service.description}</p>
+                        <div className="text-sm font-medium text-green-600 mt-1">
+                          ${service.basePrice} | {service.estimatedDuration} min
+                        </div>
                       </div>
                     </div>
-                    <Badge variant={service.isActive ? 'default' : 'secondary'}>
-                      {service.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
+                    <Badge variant="default">Maintenance</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -173,25 +171,27 @@ export default function ServicesCatalog() {
           </div>
         </TabsContent>
         
-        <TabsContent value="repair" className="space-y-4">
+        <TabsContent value="repairs" className="space-y-4">
           <div className="grid gap-4">
             {filteredServices
-              .filter(service => service.category === 'repair')
+              .filter(service => service.category === 'repairs')
               .map((service) => (
               <Card key={service.id}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">{service.name}</h3>
-                      <p className="text-sm text-muted-foreground">{service.description}</p>
-                      <div className="flex items-center space-x-4 mt-2 text-sm">
-                        <span>${service.price}</span>
-                        <span>{service.estimatedDuration} min</span>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <Wrench className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{service.name}</h3>
+                        <p className="text-sm text-muted-foreground">{service.description}</p>
+                        <div className="text-sm font-medium text-orange-600 mt-1">
+                          ${service.basePrice} | {service.estimatedDuration} min
+                        </div>
                       </div>
                     </div>
-                    <Badge variant={service.isActive ? 'default' : 'secondary'}>
-                      {service.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
+                    <Badge variant="secondary">Repairs</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -199,35 +199,29 @@ export default function ServicesCatalog() {
           </div>
         </TabsContent>
         
-        <TabsContent value="packages" className="space-y-4">
+        <TabsContent value="pricing" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Service Packages</CardTitle>
+              <CardTitle>Service Pricing Overview</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Complete Oil Service</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Oil change + Filter + Multi-point inspection
-                      </p>
-                      <p className="text-sm font-medium mt-1">$89.99 (Save $15)</p>
-                    </div>
-                    <Badge variant="default">Active</Badge>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="p-4 border rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">${avgPrice.toFixed(0)}</div>
+                    <p className="text-sm text-muted-foreground">Average Price</p>
                   </div>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Fleet Maintenance Package</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Monthly oil change + quarterly inspection
-                      </p>
-                      <p className="text-sm font-medium mt-1">$299/month</p>
+                  <div className="p-4 border rounded-lg">
+                    <div className="text-2xl font-bold">
+                      ${Math.min(...state.services.map(s => s.basePrice))}
                     </div>
-                    <Badge variant="default">Active</Badge>
+                    <p className="text-sm text-muted-foreground">Lowest Price</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="text-2xl font-bold">
+                      ${Math.max(...state.services.map(s => s.basePrice))}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Highest Price</p>
                   </div>
                 </div>
               </div>

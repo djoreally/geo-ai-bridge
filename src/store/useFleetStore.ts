@@ -1,9 +1,13 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { AppState, Van, Job, Technician, Client, Notification } from '../types';
+import type { AppState, Van, Job, Technician, Client, Notification, Equipment } from '../types';
 
-interface FleetStore extends AppState {
+interface FleetState extends AppState {
+  equipment: Equipment[];
+}
+
+interface FleetStore extends FleetState {
   // Actions
   setVans: (vans: Van[]) => void;
   addVan: (van: Van) => void;
@@ -25,6 +29,11 @@ interface FleetStore extends AppState {
   updateClient: (id: string, updates: Partial<Client>) => void;
   removeClient: (id: string) => void;
   
+  setEquipment: (equipment: Equipment[]) => void;
+  addEquipment: (equipment: Equipment) => void;
+  updateEquipment: (id: string, updates: Partial<Equipment>) => void;
+  removeEquipment: (id: string) => void;
+  
   setNotifications: (notifications: Notification[]) => void;
   addNotification: (notification: Notification) => void;
   markNotificationRead: (id: string) => void;
@@ -36,6 +45,11 @@ interface FleetStore extends AppState {
   getTechnicianById: (id: string) => Technician | undefined;
   getClientById: (id: string) => Client | undefined;
   getUnreadNotifications: () => Notification[];
+  getActiveVans: () => Van[];
+  getAvailableTechnicians: () => Technician[];
+  getTotalRevenue: () => number;
+  getVansOnJob: () => Van[];
+  getTechniciansOnJob: () => Technician[];
 }
 
 export const useFleetStore = create<FleetStore>()(
@@ -48,6 +62,7 @@ export const useFleetStore = create<FleetStore>()(
       vans: [],
       technicians: [],
       clients: [],
+      equipment: [],
       
       // Van actions
       setVans: (vans) => set({ vans }),
@@ -94,10 +109,24 @@ export const useFleetStore = create<FleetStore>()(
       removeClient: (id) =>
         set((state) => ({ clients: state.clients.filter((client) => client.id !== id) })),
       
+      // Equipment actions
+      setEquipment: (equipment) => set({ equipment }),
+      addEquipment: (equipment) => set((state) => ({ equipment: [...state.equipment, equipment] })),
+      updateEquipment: (id, updates) =>
+        set((state) => ({
+          equipment: state.equipment.map((item) =>
+            item.id === id ? { ...item, ...updates } : item
+          ),
+        })),
+      removeEquipment: (id) =>
+        set((state) => ({ equipment: state.equipment.filter((item) => item.id !== id) })),
+      
       // Notification actions
       setNotifications: (notifications) => set({ notifications }),
       addNotification: (notification) =>
-        set((state) => ({ notifications: [...state.notifications, notification] })),
+        set((state) => ({ 
+          notifications: [...state.notifications, notification] 
+        })),
       markNotificationRead: (id) =>
         set((state) => ({
           notifications: state.notifications.map((notif) =>
@@ -113,6 +142,23 @@ export const useFleetStore = create<FleetStore>()(
       getTechnicianById: (id) => get().technicians.find((tech) => tech.id === id),
       getClientById: (id) => get().clients.find((client) => client.id === id),
       getUnreadNotifications: () => get().notifications.filter((notif) => !notif.read),
+      getActiveVans: () => get().vans.filter((van) => van.status === 'active'),
+      getAvailableTechnicians: () => get().technicians.filter((tech) => tech.status === 'active'),
+      getTotalRevenue: () => get().activeJobs
+        .filter((job) => job.status === 'completed')
+        .reduce((sum, job) => sum + job.costBreakdown.totalPrice, 0),
+      getVansOnJob: () => {
+        const activeJobVanIds = get().activeJobs
+          .filter((job) => job.status === 'in_progress')
+          .map((job) => job.vanId);
+        return get().vans.filter((van) => activeJobVanIds.includes(van.id));
+      },
+      getTechniciansOnJob: () => {
+        const activeJobTechIds = get().activeJobs
+          .filter((job) => job.status === 'in_progress')
+          .map((job) => job.technicianId);
+        return get().technicians.filter((tech) => activeJobTechIds.includes(tech.id));
+      },
     }),
     { name: 'fleet-store' }
   )

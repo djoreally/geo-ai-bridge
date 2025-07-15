@@ -194,6 +194,16 @@ export interface VanInventoryItem {
   lastRestocked: Date;
 }
 
+export interface Equipment {
+  id: string;
+  name: string;
+  type: string;
+  status: 'active' | 'maintenance' | 'inactive';
+  assignedVan?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Notification {
   id: string;
   type: 'low_inventory' | 'job_assignment' | 'training_due' | 'maintenance_due' | 'general';

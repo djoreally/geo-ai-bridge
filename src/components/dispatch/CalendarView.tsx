@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Clock, MapPin, User, Truck } from 'lucide-react';
-import { useFleetStore } from '@/store/useFleetStore';
+import { useAppContext } from '@/contexts/AppContext';
+import { useRelationalQueries } from '@/hooks/useRelationalQueries';
 import { format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from 'date-fns';
 import type { Job } from '@/types';
 
@@ -14,13 +15,14 @@ interface CalendarViewProps {
 
 export function CalendarView({ onEditJob }: CalendarViewProps) {
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  const { activeJobs, getClientById, getTechnicianById, getVanById } = useFleetStore();
+  const { state } = useAppContext();
+  const { getClientWithRelations, getTechnicianWithRelations, getVanWithRelations } = useRelationalQueries();
 
   const weekStart = startOfWeek(currentWeek);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   const getJobsForDay = (date: Date) => {
-    return activeJobs.filter(job => 
+    return state.jobs.filter(job => 
       isSameDay(new Date(job.scheduledStart), date)
     );
   };
@@ -95,9 +97,9 @@ export function CalendarView({ onEditJob }: CalendarViewProps) {
               </CardHeader>
               <CardContent className="space-y-2">
                 {dayJobs.map((job) => {
-                  const client = getClientById(job.clientId);
-                  const technician = getTechnicianById(job.technicianId);
-                  const van = getVanById(job.vanId);
+                  const client = getClientWithRelations(job.clientId);
+                  const technician = getTechnicianWithRelations(job.technicianId);
+                  const van = getVanWithRelations(job.vanId);
                   
                   return (
                     <div

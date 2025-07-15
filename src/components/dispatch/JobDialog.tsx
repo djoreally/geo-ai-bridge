@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -9,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useFleetStore } from '@/store/useFleetStore';
+import { useAppContext } from '@/contexts/AppContext';
+import { useRelationalQueries } from '@/hooks/useRelationalQueries';
+import { FleetOperationService } from '@/services/fleetOperations';
 import { toast } from '@/hooks/use-toast';
 import type { Job } from '@/types';
 
@@ -17,7 +18,7 @@ const jobSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   clientId: z.string().min(1, 'Client is required'),
   locationId: z.string().min(1, 'Location is required'),
-  vehicleId: z.string().min(1, 'Vehicle is required'),
+  vehicleId: z.string().min(1, 'Vehicle is required'),  
   technicianId: z.string().min(1, 'Technician is required'),
   vanId: z.string().min(1, 'Van is required'),
   scheduledStart: z.string().min(1, 'Start time is required'),
@@ -40,19 +41,12 @@ interface JobDialogProps {
 }
 
 export function JobDialog({ open, onOpenChange, jobId }: JobDialogProps) {
-  const {
-    clients,
-    technicians,
-    vans,
-    getJobById,
-    addJob,
-    updateJob,
-    getAvailableTechnicians,
-    getActiveVans
-  } = useFleetStore();
+  const { state, dispatch } = useAppContext();
+  const { getAvailableResources } = useRelationalQueries();
 
-  const existingJob = jobId ? getJobById(jobId) : null;
+  const existingJob = jobId ? state.jobs.find(j => j.id === jobId) : null;
   const isEditing = !!existingJob;
+  const { availableVans, availableTechnicians } = getAvailableResources();
 
   const form = useForm<JobFormData>({
     resolver: zodResolver(jobSchema),
@@ -76,7 +70,7 @@ export function JobDialog({ open, onOpenChange, jobId }: JobDialogProps) {
   });
 
   const selectedClient = form.watch('clientId');
-  const selectedClientData = clients.find(c => c.id === selectedClient);
+  const selectedClientData = state.clients.find(c => c.id === selectedClient);
 
   useEffect(() => {
     if (existingJob) {
@@ -121,6 +115,22 @@ export function JobDialog({ open, onOpenChange, jobId }: JobDialogProps) {
   const onSubmit = (data: JobFormData) => {
     const totalPrice = data.laborCost + data.partsCost + data.taxes + data.fees - data.discounts;
 
+    // Validate job assignment
+    const validation = FleetOperationService.validateJobAssignment(
+      { vanId: data.vanId, technicianId: data.technicianId },
+      state.vans,
+      state.technicians
+    );
+
+    if (!validation.isValid) {
+      toast({
+        title: 'Assignment Error',
+        description: validation.errors.join(', '),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const jobData: Omit<Job, 'id' | 'createdAt' | 'updatedAt'> = {
       title: data.title,
       clientId: data.clientId,
@@ -145,9 +155,15 @@ export function JobDialog({ open, onOpenChange, jobId }: JobDialogProps) {
     };
 
     if (isEditing && existingJob) {
-      updateJob(existingJob.id, {
-        ...jobData,
-        updatedAt: new Date(),
+      dispatch({
+        type: 'UPDATE_JOB',
+        payload: {
+          id: existingJob.id,
+          updates: {
+            ...jobData,
+            updatedAt: new Date(),
+          },
+        },
       });
       toast({
         title: 'Job updated',
@@ -156,11 +172,11 @@ export function JobDialog({ open, onOpenChange, jobId }: JobDialogProps) {
     } else {
       const newJob: Job = {
         ...jobData,
-        id: `job_${Date.now()}`,
+        id: FleetOperationService.generateJobId(),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      addJob(newJob);
+      dispatch({ type: 'ADD_JOB', payload: newJob });
       toast({
         title: 'Job created',
         description: 'The job has been successfully created.',
@@ -235,7 +251,7 @@ export function JobDialog({ open, onOpenChange, jobId }: JobDialogProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {clients.map((client) => (
+                        {state.clients.map((client) => (
                           <SelectItem key={client.id} value={client.id}>
                             {client.businessName}
                           </SelectItem>
@@ -312,7 +328,7 @@ export function JobDialog({ open, onOpenChange, jobId }: JobDialogProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {getAvailableTechnicians().map((technician) => (
+                        {availableTechnicians.map((technician) => (
                           <SelectItem key={technician.id} value={technician.id}>
                             {technician.fullName}
                           </SelectItem>
@@ -337,7 +353,7 @@ export function JobDialog({ open, onOpenChange, jobId }: JobDialogProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {getActiveVans().map((van) => (
+                        {availableVans.map((van) => (
                           <SelectItem key={van.id} value={van.id}>
                             {van.name} - {van.licensePlate}
                           </SelectItem>

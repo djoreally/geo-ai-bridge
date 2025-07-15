@@ -1,18 +1,18 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus, Calendar, MapPin } from 'lucide-react';
 import { CalendarView } from '@/components/dispatch/CalendarView';
 import { MapView } from '@/components/dispatch/MapView';
 import { JobDialog } from '@/components/dispatch/JobDialog';
-import { useFleetStore } from '@/store/useFleetStore';
+import { useAppContext } from '@/contexts/AppContext';
 
 export default function DispatchHub() {
   const [isJobDialogOpen, setIsJobDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
-  const { activeJobs } = useFleetStore();
+  const { state } = useAppContext();
 
   const handleCreateJob = () => {
     setSelectedJob(null);
@@ -24,13 +24,21 @@ export default function DispatchHub() {
     setIsJobDialogOpen(true);
   };
 
+  const scheduledJobs = state.jobs.filter(j => j.status === 'scheduled').length;
+  const inProgressJobs = state.jobs.filter(j => j.status === 'in_progress').length;
+  const completedToday = state.jobs.filter(j => 
+    j.status === 'completed' && 
+    j.actualEnd && 
+    new Date(j.actualEnd).toDateString() === new Date().toDateString()
+  ).length;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dispatch Hub</h1>
           <p className="text-muted-foreground">
-            Assign vans and technicians to jobs based on location and availability
+            Assign vans and technicians to jobs based on location, availability, and capacity
           </p>
         </div>
         <Button onClick={handleCreateJob} className="gap-2">
@@ -45,9 +53,7 @@ export default function DispatchHub() {
             <CardTitle className="text-sm font-medium">Scheduled Jobs</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {activeJobs.filter(j => j.status === 'scheduled').length}
-            </div>
+            <div className="text-2xl font-bold">{scheduledJobs}</div>
           </CardContent>
         </Card>
         
@@ -56,9 +62,7 @@ export default function DispatchHub() {
             <CardTitle className="text-sm font-medium">In Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {activeJobs.filter(j => j.status === 'in_progress').length}
-            </div>
+            <div className="text-2xl font-bold">{inProgressJobs}</div>
           </CardContent>
         </Card>
         
@@ -67,13 +71,7 @@ export default function DispatchHub() {
             <CardTitle className="text-sm font-medium">Completed Today</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {activeJobs.filter(j => 
-                j.status === 'completed' && 
-                j.actualEnd && 
-                new Date(j.actualEnd).toDateString() === new Date().toDateString()
-              ).length}
-            </div>
+            <div className="text-2xl font-bold">{completedToday}</div>
           </CardContent>
         </Card>
       </div>

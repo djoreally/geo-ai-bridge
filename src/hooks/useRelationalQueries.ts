@@ -1,186 +1,138 @@
 
-import { useMemo } from 'react';
 import { useAppContext } from '@/contexts/AppContext';
-import type { Client, Vehicle, Location, Job, Van, Technician } from '@/types';
+import { Van, Technician, Job, Client, Location, Vehicle } from '@/types';
 
 export function useRelationalQueries() {
   const { state } = useAppContext();
 
-  // Client relationships
-  const getClientWithRelations = useMemo(() => 
-    (clientId: string): Client & { 
-      locations: Location[], 
-      vehicles: Vehicle[], 
-      activeJobs: Job[] 
-    } | null => {
-      const client = state.clients.find(c => c.id === clientId);
-      if (!client) return null;
+  // Get van with assigned technicians and active jobs
+  const getVanDetails = (vanId: string) => {
+    const van = state.vans.find(v => v.id === vanId);
+    if (!van) return null;
 
-      const locations = client.locations || [];
-      const vehicles = client.vehicles || [];
-      const activeJobs = state.jobs.filter(job => job.clientId === clientId);
+    const assignedTechnicians = state.technicians.filter(tech => 
+      van.assignedTechnicians?.includes(tech.id) || false
+    );
+    const activeJobs = state.jobs.filter(job => 
+      job.vanId === vanId && job.status === 'in_progress'
+    );
 
-      return {
-        ...client,
-        locations,
-        vehicles,
-        activeJobs,
-      };
-    }, [state.clients, state.jobs]
-  );
+    return {
+      ...van,
+      technicians: assignedTechnicians,
+      activeJobs
+    };
+  };
 
-  // Van relationships
-  const getVanWithRelations = useMemo(() =>
-    (vanId: string): Van & {
-      assignedTechnicians: Technician[],
-      activeJobs: Job[],
-      completedJobsToday: Job[]
-    } | null => {
-      const van = state.vans.find(v => v.id === vanId);
-      if (!van) return null;
+  // Get technician with assigned van and schedule
+  const getTechnicianDetails = (technicianId: string) => {
+    const technician = state.technicians.find(t => t.id === technicianId);
+    if (!technician) return null;
 
-      const assignedTechnicians = state.technicians.filter(tech => 
-        van.assignedTechnicians?.includes(tech.id) || false
-      );
-      const activeJobs = state.jobs.filter(job => 
-        job.vanId === vanId && job.status === 'in_progress'
-      );
-      const today = new Date().toDateString();
-      const completedJobsToday = state.jobs.filter(job =>
-        job.vanId === vanId && 
-        job.status === 'completed' &&
-        job.actualEnd &&
-        new Date(job.actualEnd).toDateString() === today
-      );
+    const assignedVan = state.vans.find(van => 
+      van.assignedTechnicians?.includes(technicianId)
+    );
+    const assignedJobs = state.jobs.filter(job => 
+      job.technicianId === technicianId
+    );
 
-      return {
-        ...van,
-        assignedTechnicians,
-        activeJobs,
-        completedJobsToday,
-      };
-    }, [state.vans, state.technicians, state.jobs]
-  );
+    return {
+      ...technician,
+      van: assignedVan,
+      jobs: assignedJobs
+    };
+  };
 
-  // Technician relationships
-  const getTechnicianWithRelations = useMemo(() =>
-    (techId: string): Technician & {
-      assignedVan: Van | null,
-      activeJobs: Job[],
-      completedJobsToday: Job[]
-    } | null => {
-      const technician = state.technicians.find(t => t.id === techId);
-      if (!technician) return null;
+  // Get job with all related entities
+  const getJobDetails = (jobId: string) => {
+    const job = state.jobs.find(j => j.id === jobId);
+    if (!job) return null;
 
-      const assignedVan = technician.assignedVan 
-        ? state.vans.find(v => v.id === technician.assignedVan) || null
-        : null;
-      const activeJobs = state.jobs.filter(job => 
-        job.technicianId === techId && job.status === 'in_progress'
-      );
-      const today = new Date().toDateString();
-      const completedJobsToday = state.jobs.filter(job =>
-        job.technicianId === techId && 
-        job.status === 'completed' &&
-        job.actualEnd &&
-        new Date(job.actualEnd).toDateString() === today
-      );
+    const technician = state.technicians.find(t => t.id === job.technicianId);
+    const van = state.vans.find(v => v.id === job.vanId);
+    const client = state.clients.find(c => c.id === job.clientId);
+    const location = state.locations.find(l => l.id === job.locationId);
+    const vehicle = state.vehicles.find(v => v.id === job.vehicleId);
 
-      return {
-        ...technician,
-        assignedVan,
-        activeJobs,
-        completedJobsToday,
-      };
-    }, [state.technicians, state.vans, state.jobs]
-  );
+    return {
+      ...job,
+      technician,
+      van,
+      client,
+      location,
+      vehicle
+    };
+  };
 
-  // Job relationships
-  const getJobWithRelations = useMemo(() =>
-    (jobId: string): Job & {
-      client: Client | null,
-      vehicle: Vehicle | null,
-      location: Location | null,
-      technician: Technician | null,
-      van: Van | null
-    } | null => {
-      const job = state.jobs.find(j => j.id === jobId);
-      if (!job) return null;
+  // Get client with all locations and vehicles
+  const getClientDetails = (clientId: string) => {
+    const client = state.clients.find(c => c.id === clientId);
+    if (!client) return null;
 
-      const client = state.clients.find(c => c.id === job.clientId) || null;
-      const vehicle = client?.vehicles.find(v => v.id === job.vehicleId) || null;
-      const location = client?.locations.find(l => l.id === job.locationId) || null;
-      const technician = state.technicians.find(t => t.id === job.technicianId) || null;
-      const van = state.vans.find(v => v.id === job.vanId) || null;
+    const locations = state.locations.filter(l => l.clientId === clientId);
+    const vehicles = state.vehicles.filter(v => v.clientId === clientId);
+    const jobs = state.jobs.filter(j => j.clientId === clientId);
 
-      return {
-        ...job,
-        client,
-        vehicle,
-        location,
-        technician,
-        van,
-      };
-    }, [state.jobs, state.clients, state.technicians, state.vans]
-  );
+    return {
+      ...client,
+      locations,
+      vehicles,
+      jobs
+    };
+  };
 
-  // Dashboard metrics
-  const getDashboardMetrics = useMemo(() => {
-    const activeVans = state.vans.filter(v => v.status === 'active').length;
-    const scheduledJobs = state.jobs.filter(j => j.status === 'scheduled').length;
-    const inProgressJobs = state.jobs.filter(j => j.status === 'in_progress').length;
-    
+  // Get available resources for dispatch
+  const getAvailableResources = {
+    availableVans: state.vans.filter(van => van.status === 'active'),
+    availableTechnicians: state.technicians.filter(tech => tech.status === 'active'),
+    unreadNotifications: state.notifications.filter(n => !n.read)
+  };
+
+  // Get dashboard metrics
+  const getDashboardMetrics = () => {
     const today = new Date().toDateString();
-    const vehiclesServicedToday = new Set(
-      state.jobs
-        .filter(j => j.status === 'completed' && j.actualEnd && 
-          new Date(j.actualEnd).toDateString() === today)
-        .map(j => j.vehicleId)
-    ).size;
-
-    const totalRevenue = state.jobs
-      .filter(j => j.status === 'completed')
-      .reduce((sum, job) => sum + job.costBreakdown.totalPrice, 0);
-
-    const completedJobs = state.jobs.filter(j => j.status === 'completed');
-    const avgServiceTime = completedJobs.length > 0
-      ? completedJobs.reduce((sum, job) => {
-          if (job.actualStart && job.actualEnd) {
-            return sum + (new Date(job.actualEnd).getTime() - new Date(job.actualStart).getTime());
-          }
-          return sum;
-        }, 0) / (completedJobs.length * 1000 * 60) // Convert to minutes
-      : 0;
-
+    
     return {
-      activeVans,
-      scheduledJobs,
-      openTickets: inProgressJobs,
-      vehiclesServicedToday,
-      totalRevenue,
-      avgServiceTime: Math.round(avgServiceTime),
+      totalJobs: state.jobs.length,
+      todaysJobs: state.jobs.filter(job => 
+        new Date(job.scheduledStart).toDateString() === today
+      ).length,
+      activeVans: state.vans.filter(van => van.status === 'active').length,
+      activeTechnicians: state.technicians.filter(tech => 
+        tech.status === 'active'
+      ).length,
+      completedJobs: state.jobs.filter(job => job.status === 'completed').length,
+      pendingJobs: state.jobs.filter(job => job.status === 'scheduled').length
     };
-  }, [state.vans, state.jobs]);
+  };
 
-  // Available resources
-  const getAvailableResources = useMemo(() => {
-    const availableVans = state.vans.filter(v => v.status === 'active');
-    const availableTechnicians = state.technicians.filter(t => t.status === 'active');
-    const unreadNotifications = state.notifications.filter(n => !n.read);
+  // Get jobs by status
+  const getJobsByStatus = (status: string) => {
+    return state.jobs.filter(job => job.status === status);
+  };
 
+  // Get technician workload
+  const getTechnicianWorkload = (technicianId: string) => {
+    const jobs = state.jobs.filter(job => 
+      job.technicianId === technicianId && 
+      ['scheduled', 'in_progress'].includes(job.status)
+    );
+    
     return {
-      availableVans,
-      availableTechnicians,
-      unreadNotifications,
+      totalJobs: jobs.length,
+      scheduledJobs: jobs.filter(job => job.status === 'scheduled').length,
+      inProgressJobs: jobs.filter(job => job.status === 'in_progress').length
     };
-  }, [state.vans, state.technicians, state.notifications]);
+  };
 
   return {
-    getClientWithRelations,
-    getVanWithRelations,
-    getTechnicianWithRelations,
-    getJobWithRelations,
-    getDashboardMetrics,
+    getVanDetails,
+    getTechnicianDetails,
+    getJobDetails,
+    getClientDetails,
     getAvailableResources,
+    getDashboardMetrics,
+    getJobsByStatus,
+    getTechnicianWorkload
   };
 }

@@ -8,6 +8,15 @@ import { AppProvider } from "./contexts/AppContext";
 import { AppLayout } from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import DispatchHub from "./pages/DispatchHub";
+import ClientsLocations from "./pages/ClientsLocations";
+import FleetManagement from "./pages/FleetManagement";
+import Technicians from "./pages/Technicians";
+import JobsScheduling from "./pages/JobsScheduling";
+import Inventory from "./pages/Inventory";
+import ServicesCatalog from "./pages/ServicesCatalog";
+import Analytics from "./pages/Analytics";
+import Notifications from "./pages/Notifications";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,15 +32,15 @@ const App = () => (
             <Route path="/" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="dispatch" element={<DispatchHub />} />
-              <Route path="clients" element={<div>Clients & Locations - Coming Soon</div>} />
-              <Route path="fleet" element={<div>Fleet Management - Coming Soon</div>} />
-              <Route path="technicians" element={<div>Technicians - Coming Soon</div>} />
-              <Route path="jobs" element={<div>Jobs & Scheduling - Coming Soon</div>} />
-              <Route path="inventory" element={<div>Inventory - Coming Soon</div>} />
-              <Route path="services" element={<div>Services Catalog - Coming Soon</div>} />
-              <Route path="analytics" element={<div>Analytics - Coming Soon</div>} />
-              <Route path="notifications" element={<div>Notifications - Coming Soon</div>} />
-              <Route path="settings" element={<div>Settings - Coming Soon</div>} />
+              <Route path="clients" element={<ClientsLocations />} />
+              <Route path="fleet" element={<FleetManagement />} />
+              <Route path="technicians" element={<Technicians />} />
+              <Route path="jobs" element={<JobsScheduling />} />
+              <Route path="inventory" element={<Inventory />} />
+              <Route path="services" element={<ServicesCatalog />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="notifications" element={<Notifications />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -40,7 +40,7 @@ export function useRelationalQueries() {
       if (!van) return null;
 
       const assignedTechnicians = state.technicians.filter(tech => 
-        van.assignedTechnicians.includes(tech.id)
+        van.assignedTechnicians?.includes(tech.id) || false
       );
       const activeJobs = state.jobs.filter(job => 
         job.vanId === vanId && job.status === 'in_progress'

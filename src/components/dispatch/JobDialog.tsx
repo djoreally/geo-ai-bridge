@@ -46,7 +46,7 @@ export function JobDialog({ open, onOpenChange, jobId }: JobDialogProps) {
 
   const existingJob = jobId ? state.jobs.find(j => j.id === jobId) : null;
   const isEditing = !!existingJob;
-  const { availableVans, availableTechnicians } = getAvailableResources();
+  const { availableVans, availableTechnicians } = getAvailableResources;
 
   const form = useForm<JobFormData>({
     resolver: zodResolver(jobSchema),

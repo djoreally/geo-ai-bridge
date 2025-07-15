@@ -19,7 +19,7 @@ export default function Technicians() {
   );
 
   const activeTechnicians = state.technicians.filter(tech => tech.status === 'active').length;
-  const onDutyTechnicians = state.technicians.filter(tech => tech.status === 'active').length; // Using active instead of on_duty
+  const onDutyTechnicians = state.technicians.filter(tech => tech.status === 'active').length;
 
   return (
     <div className="space-y-6">
@@ -140,7 +140,7 @@ export default function Technicians() {
                       <Badge 
                         variant={
                           technician.status === 'active' ? 'default' : 
-                          technician.status === 'active' ? 'secondary' : 
+                          technician.status === 'invited' ? 'secondary' : 
                           'destructive'
                         }
                       >

@@ -1,51 +1,54 @@
 
-import type { Van, Job, Technician, Client, InventoryItem, Service } from '../types';
+import type { Van, Technician, Client, Job, InventoryItem, Service, Location, Vehicle } from '../types';
 
-// Mock data for development
 export const mockVans: Van[] = [
   {
     id: 'van-1',
     name: 'Van Alpha',
-    licensePlate: 'FLT-001',
-    capacity: { oil: 50, filters: 100 },
+    make: 'Ford',
+    model: 'Transit',
+    year: 2022,
+    licensePlate: 'VAN-001',
+    fuelLevel: 75,
+    capacity: {
+      oil: 50,
+      filters: 20
+    },
     assignedTechnicians: ['tech-1'],
     inventory: [
-      { inventoryItemId: 'inv-1', quantity: 25, lastRestocked: new Date('2024-01-10') },
-      { inventoryItemId: 'inv-2', quantity: 50, lastRestocked: new Date('2024-01-10') }
+      { inventoryItemId: 'inv-1', quantity: 10, lastRestocked: new Date() },
+      { inventoryItemId: 'inv-2', quantity: 5, lastRestocked: new Date() }
     ],
     serviceArea: {
       center: { lat: 40.7128, lng: -74.0060 },
       radius: 25
     },
-    currentLocation: {
-      lat: 40.7580,
-      lng: -73.9855,
-      lastUpdated: new Date()
-    },
     status: 'active',
-    createdAt: new Date('2024-01-01'),
+    createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     id: 'van-2',
     name: 'Van Beta',
-    licensePlate: 'FLT-002',
-    capacity: { oil: 45, filters: 80 },
+    make: 'Chevrolet',
+    model: 'Express',
+    year: 2023,
+    licensePlate: 'VAN-002',
+    fuelLevel: 60,
+    capacity: {
+      oil: 45,
+      filters: 18
+    },
     assignedTechnicians: ['tech-2'],
     inventory: [
-      { inventoryItemId: 'inv-1', quantity: 20, lastRestocked: new Date('2024-01-08') }
+      { inventoryItemId: 'inv-1', quantity: 8, lastRestocked: new Date() }
     ],
     serviceArea: {
-      center: { lat: 40.6782, lng: -73.9442 },
-      radius: 20
-    },
-    currentLocation: {
-      lat: 40.6892,
-      lng: -73.9442,
-      lastUpdated: new Date()
+      center: { lat: 40.7589, lng: -73.9851 },
+      radius: 30
     },
     status: 'active',
-    createdAt: new Date('2024-01-01'),
+    createdAt: new Date(),
     updatedAt: new Date()
   }
 ];
@@ -53,34 +56,36 @@ export const mockVans: Van[] = [
 export const mockTechnicians: Technician[] = [
   {
     id: 'tech-1',
-    fullName: 'John Martinez',
-    email: 'john.martinez@fleetcommand.com',
+    name: 'John Smith',
+    fullName: 'John Smith',
+    email: 'john.smith@fleet.com',
     phone: '+1-555-0101',
     status: 'active',
     assignedVan: 'van-1',
     role: 'lead_tech',
     hrDocsUploaded: true,
     trainingCompleted: [
-      { id: 'training-1', name: 'Oil Change Certification', completed: true, completedAt: new Date('2024-01-15') }
+      { id: 'training-1', name: 'Oil Change Certification', completed: true, completedAt: new Date() }
     ],
     certifications: [],
-    createdAt: new Date('2024-01-01'),
+    createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     id: 'tech-2',
-    fullName: 'Sarah Williams',
-    email: 'sarah.williams@fleetcommand.com',
+    name: 'Mike Johnson',
+    fullName: 'Mike Johnson',
+    email: 'mike.johnson@fleet.com',
     phone: '+1-555-0102',
     status: 'active',
     assignedVan: 'van-2',
     role: 'technician',
     hrDocsUploaded: true,
     trainingCompleted: [
-      { id: 'training-1', name: 'Oil Change Certification', completed: true, completedAt: new Date('2024-01-20') }
+      { id: 'training-1', name: 'Oil Change Certification', completed: true, completedAt: new Date() }
     ],
     certifications: [],
-    createdAt: new Date('2024-01-05'),
+    createdAt: new Date(),
     updatedAt: new Date()
   }
 ];
@@ -88,26 +93,31 @@ export const mockTechnicians: Technician[] = [
 export const mockClients: Client[] = [
   {
     id: 'client-1',
-    businessName: 'Metro Logistics Corp',
+    name: 'ABC Corporation',
+    businessName: 'ABC Corporation',
+    email: 'contact@abc-corp.com',
+    phone: '+1-555-1000',
+    status: 'active',
     primaryContact: {
-      name: 'Mike Johnson',
-      phone: '+1-555-0201',
-      email: 'mike.johnson@metrologistics.com'
+      name: 'Sarah Wilson',
+      phone: '+1-555-1001',
+      email: 'sarah@abc-corp.com'
     },
     billingInfo: {
-      email: 'billing@metrologistics.com',
-      phone: '+1-555-0202'
+      email: 'billing@abc-corp.com',
+      phone: '+1-555-1002'
     },
     locations: [
       {
         id: 'loc-1',
         clientId: 'client-1',
+        name: 'Main Warehouse',
         address: '123 Business Ave',
         city: 'New York',
         state: 'NY',
         zipCode: '10001',
-        coordinates: { lat: 40.7505, lng: -73.9934 },
-        createdAt: new Date('2024-01-01')
+        coordinates: { lat: 40.7128, lng: -74.0060 },
+        createdAt: new Date()
       }
     ],
     vehicles: [
@@ -116,17 +126,18 @@ export const mockClients: Client[] = [
         clientId: 'client-1',
         locationId: 'loc-1',
         vin: '1HGBH41JXMN109186',
-        year: 2022,
-        make: 'Ford',
-        model: 'Transit',
-        engine: '3.5L V6',
-        licensePlate: 'NYC-123',
-        mileage: 45000,
-        createdAt: new Date('2024-01-01'),
+        year: 2021,
+        make: 'Honda',
+        model: 'Accord',
+        engine: '2.0L Turbo',
+        licensePlate: 'ABC-001',
+        mileage: 25000,
+        status: 'active',
+        createdAt: new Date(),
         updatedAt: new Date()
       }
     ],
-    createdAt: new Date('2024-01-01'),
+    createdAt: new Date(),
     updatedAt: new Date()
   }
 ];
@@ -134,7 +145,8 @@ export const mockClients: Client[] = [
 export const mockJobs: Job[] = [
   {
     id: 'job-1',
-    title: 'Oil Change - Metro Logistics Van',
+    title: 'Oil Change Service',
+    type: 'maintenance',
     clientId: 'client-1',
     locationId: 'loc-1',
     vehicleId: 'vehicle-1',
@@ -142,31 +154,30 @@ export const mockJobs: Job[] = [
     vanId: 'van-1',
     services: [
       {
-        id: 'job-service-1',
-        serviceId: 'service-1',
+        id: 'service-1',
+        serviceId: 'svc-1',
         serviceName: 'Oil Change',
         duration: 30,
-        price: 85.00,
+        price: 50,
         inventoryUsed: [
-          { inventoryItemId: 'inv-1', quantity: 5, cost: 25.00 },
-          { inventoryItemId: 'inv-2', quantity: 1, cost: 15.00 }
+          { inventoryItemId: 'inv-1', quantity: 1, cost: 25 }
         ],
         completed: false
       }
     ],
     status: 'scheduled',
-    scheduledStart: new Date('2024-01-15T10:00:00'),
-    scheduledEnd: new Date('2024-01-15T10:30:00'),
+    scheduledStart: new Date(),
+    scheduledEnd: new Date(),
     costBreakdown: {
-      laborCost: 45.00,
-      partsCost: 40.00,
-      taxes: 6.80,
+      laborCost: 50,
+      partsCost: 25,
+      taxes: 7.5,
       fees: 0,
       discounts: 0,
-      totalPrice: 91.80
+      totalPrice: 82.5
     },
     photos: [],
-    createdAt: new Date('2024-01-10'),
+    createdAt: new Date(),
     updatedAt: new Date()
   }
 ];
@@ -174,86 +185,63 @@ export const mockJobs: Job[] = [
 export const mockInventory: InventoryItem[] = [
   {
     id: 'inv-1',
-    partId: 'OIL-5W30-SYN',
-    name: '5W-30 Synthetic Oil',
-    description: 'Premium synthetic motor oil',
+    partId: 'part-1',
+    name: 'Premium Motor Oil',
+    sku: 'OIL-001',
+    description: '5W-30 Full Synthetic Motor Oil',
     type: 'oil',
-    unitCost: 5.00,
-    warehouseQuantity: 500,
-    restockThreshold: 50,
+    category: 'Fluids',
+    location: 'Warehouse A',
+    unitCost: 25,
+    unitPrice: 35,
+    warehouseQuantity: 100,
+    quantity: 100,
+    minQuantity: 20,
+    restockThreshold: 30,
     specifications: {
       viscosity: '5W-30',
-      type: 'synthetic',
-      capacity: '1 quart'
+      type: 'Full Synthetic',
+      capacity: '5 Quarts'
     },
-    createdAt: new Date('2024-01-01'),
+    createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     id: 'inv-2',
-    partId: 'FILTER-STD-001',
-    name: 'Standard Oil Filter',
-    description: 'Universal oil filter for most vehicles',
+    partId: 'part-2',
+    name: 'Oil Filter',
+    sku: 'FILTER-001',
+    description: 'Premium Oil Filter',
     type: 'filter',
-    unitCost: 15.00,
-    warehouseQuantity: 200,
-    restockThreshold: 25,
-    createdAt: new Date('2024-01-01'),
+    category: 'Filters',
+    location: 'Warehouse A',
+    unitCost: 8,
+    unitPrice: 12,
+    warehouseQuantity: 50,
+    quantity: 50,
+    minQuantity: 10,
+    restockThreshold: 15,
+    createdAt: new Date(),
     updatedAt: new Date()
   }
 ];
 
 export const mockServices: Service[] = [
   {
-    id: 'service-1',
+    id: 'svc-1',
     name: 'Oil Change',
-    description: 'Complete oil and filter change service',
+    description: 'Complete oil change service',
     category: 'maintenance',
     estimatedDuration: 30,
-    basePrice: 85.00,
-    taxRate: 0.08,
+    basePrice: 50,
+    price: 50,
+    isActive: true,
+    taxRate: 0.10,
     requiredInventory: [
-      { inventoryItemId: 'inv-1', quantity: 5, required: true },
+      { inventoryItemId: 'inv-1', quantity: 1, required: true },
       { inventoryItemId: 'inv-2', quantity: 1, required: true }
     ],
-    createdAt: new Date('2024-01-01'),
+    createdAt: new Date(),
     updatedAt: new Date()
   }
 ];
-
-// Mock API service
-export class MockDataService {
-  static async getVans(): Promise<Van[]> {
-    await this.delay(500);
-    return mockVans;
-  }
-
-  static async getTechnicians(): Promise<Technician[]> {
-    await this.delay(300);
-    return mockTechnicians;
-  }
-
-  static async getClients(): Promise<Client[]> {
-    await this.delay(400);
-    return mockClients;
-  }
-
-  static async getJobs(): Promise<Job[]> {
-    await this.delay(600);
-    return mockJobs;
-  }
-
-  static async getInventory(): Promise<InventoryItem[]> {
-    await this.delay(200);
-    return mockInventory;
-  }
-
-  static async getServices(): Promise<Service[]> {
-    await this.delay(200);
-    return mockServices;
-  }
-
-  private static delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-}
